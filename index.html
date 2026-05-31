@@ -143,7 +143,7 @@ async function sendMessage(){
   const{context,sources}=retrieve(q);
   setStatus("Asking Claude...");
   try{
-    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-allow-browser":"true"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:1000,system:`You are a helpful document assistant. Answer ONLY using the context below. Be concise. If not in context, say so.\n\nCONTEXT:\n${context}`,messages:[{role:"user",content:q}]})});
+    const res=await fetch("https://https://docai-proxy.bhanuchimmiri9999.workers.dev/",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-allow-browser":"true"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:1000,system:`You are a helpful document assistant. Answer ONLY using the context below. Be concise. If not in context, say so.\n\nCONTEXT:\n${context}`,messages:[{role:"user",content:q}]})});
     const data=await res.json();removeThinking();
     if(data.error){addMsg("assistant","API Error: "+data.error.message,[]);setStatus("Error: "+data.error.message);}
     else if(data.content&&data.content[0]){addMsg("assistant",data.content[0].text,sources);setStatus("Done — answered from "+sources.length+" source(s).");}
