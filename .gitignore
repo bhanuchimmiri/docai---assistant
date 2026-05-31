@@ -1,0 +1,12 @@
+# ignore any local config with real keys
+config.local.js
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor folders
+.vscode/
+.idea/

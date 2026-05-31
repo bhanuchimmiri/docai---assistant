@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DocAI — Ask Questions About Any Document</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+  <div id="app">
+
+    <!-- Header -->
+    <header id="header">
+      <div class="logo">
+        <i class="fa-solid fa-file-magnifying-glass"></i>
+      </div>
+      <h1>DocAI Assistant</h1>
+      <span class="badge">RAG · Claude Sonnet</span>
+    </header>
+
+    <!-- Main Layout -->
+    <div id="main">
+
+      <!-- Sidebar -->
+      <aside id="sidebar">
+        <p class="section-label">Documents</p>
+
+        <div id="drop-zone" onclick="document.getElementById('file-input').click()">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <p>Upload PDF or TXT</p>
+          <span>click or drag &amp; drop</span>
+        </div>
+        <input type="file" id="file-input" accept=".pdf,.txt,.md" multiple />
+
+        <div id="doc-list">
+          <p id="no-docs">No documents yet</p>
+        </div>
+      </aside>
+
+      <!-- Chat Area -->
+      <section id="chat-area">
+        <div id="messages">
+          <div class="welcome-msg" id="welcome">
+            <i class="fa-solid fa-robot"></i>
+            <p>Upload a document on the left, then ask me anything about its contents.<br>I'll answer using only what's in your document.</p>
+            <div class="suggested-qs">
+              <button class="sq-btn" onclick="fillQ('Summarize the main topics in this document')">Summarize the document</button>
+              <button class="sq-btn" onclick="fillQ('What are the key points?')">Key points</button>
+              <button class="sq-btn" onclick="fillQ('What questions does this document answer?')">What does it cover?</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="input-bar">
+          <textarea id="user-input" placeholder="Ask a question about your document..." rows="1"></textarea>
+          <button id="send-btn" onclick="sendMessage()" aria-label="Send">
+            <i class="fa-solid fa-arrow-up"></i>
+          </button>
+        </div>
+
+        <div id="status-bar"></div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
