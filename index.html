@@ -10,13 +10,13 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f8;color:#1c1c1c;height:100vh;display:flex;align-items:center;justify-content:center}
 #app{width:920px;height:660px;background:#fff;border-radius:16px;border:1px solid #e2e8f0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.1)}
-#header{padding:14px 22px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;background:#fff}
+#header{padding:14px 22px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:12px}
 #header .logo{width:32px;height:32px;background:linear-gradient(135deg,#1D9E75,#0f6e56);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px}
 #header h1{font-size:16px;font-weight:600;color:#1a1a2e}
 #header .badge{margin-left:auto;font-size:11px;padding:3px 10px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:20px}
 #api-banner{background:#fef9c3;border-bottom:1px solid #fde68a;padding:10px 20px;display:flex;align-items:center;gap:10px;font-size:12px;color:#92400e}
 #api-banner input{flex:1;padding:6px 10px;border-radius:6px;border:1px solid #fcd34d;font-size:12px;font-family:monospace;background:#fffbeb;color:#1c1c1c;outline:none}
-#api-banner button{padding:6px 16px;background:#1D9E75;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;white-space:nowrap}
+#api-banner button{padding:6px 16px;background:#1D9E75;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500}
 #main{display:flex;flex:1;overflow:hidden}
 #sidebar{width:240px;flex-shrink:0;border-right:1px solid #e2e8f0;background:#fafbfc;padding:16px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
 .section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8}
@@ -116,6 +116,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f8;color:#1c1c1
 if(typeof pdfjsLib!="undefined"){pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";}
 const docs=[],messagesEl=document.getElementById("messages"),userInput=document.getElementById("user-input"),sendBtn=document.getElementById("send-btn");
 let isLoading=false,API_KEY="";
+const WORKER_URL="https://docai-proxy.bhanuchimmiri9999.workers.dev";
 function saveApiKey(){const v=document.getElementById("api-key-input").value.trim();if(!v||!v.startsWith("sk-")){alert("Key should start with sk-ant-...");return;}API_KEY=v;document.getElementById("api-banner").style.display="none";setStatus("Ready! Upload a document and ask a question.");}
 document.getElementById("api-key-input").addEventListener("keydown",e=>{if(e.key==="Enter")saveApiKey();});
 const dz=document.getElementById("drop-zone"),fi=document.getElementById("file-input");
@@ -143,12 +144,29 @@ async function sendMessage(){
   const{context,sources}=retrieve(q);
   setStatus("Asking Claude...");
   try{
-    const res=await fetch("https://https://docai-proxy.bhanuchimmiri9999.workers.dev/",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-allow-browser":"true"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:1000,system:`You are a helpful document assistant. Answer ONLY using the context below. Be concise. If not in context, say so.\n\nCONTEXT:\n${context}`,messages:[{role:"user",content:q}]})});
+    const res=await fetch(WORKER_URL,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "x-api-key":API_KEY,
+        "anthropic-version":"2023-06-01"
+      },
+      body:JSON.stringify({
+        model:"claude-haiku-4-5-20251001",
+        max_tokens:1000,
+        system:`You are a helpful document assistant. Answer ONLY using the context below. Be concise. If not in context, say so.\n\nCONTEXT:\n${context}`,
+        messages:[{role:"user",content:q}]
+      })
+    });
     const data=await res.json();removeThinking();
-    if(data.error){addMsg("assistant","API Error: "+data.error.message,[]);setStatus("Error: "+data.error.message);}
-    else if(data.content&&data.content[0]){addMsg("assistant",data.content[0].text,sources);setStatus("Done — answered from "+sources.length+" source(s).");}
+    if(data.error){addMsg("assistant","Error: "+data.error.message,[]);setStatus("Error: "+data.error.message);}
+    else if(data.content&&data.content[0]){addMsg("assistant",data.content[0].text,sources);setStatus("Done!");}
     else{addMsg("assistant","Unexpected response. Please try again.",[]);}
-  }catch(e){removeThinking();addMsg("assistant","Connection failed: "+e.message+". Make sure you are online and the page is served over http:// not file://",[]);setStatus("Error: "+e.message);}
+  }catch(e){
+    removeThinking();
+    addMsg("assistant","Error: "+e.message+". Please make sure your API key is correct and try again.",[]);
+    setStatus("Error: "+e.message);
+  }
   isLoading=false;sendBtn.disabled=false;
 }
 function addMsg(role,text,sources){const div=document.createElement("div");div.className="msg "+role;const src=sources&&sources.length?`<div class="source-chips">${sources.map(s=>`<span class="source-chip"><i class="fa-solid fa-file-lines"></i> ${s}</span>`).join("")}</div>`:"";div.innerHTML=`<div class="avatar">${role==="user"?"You":"AI"}</div><div class="bubble">${esc(text)}${src}</div>`;messagesEl.appendChild(div);messagesEl.scrollTop=messagesEl.scrollHeight;}
